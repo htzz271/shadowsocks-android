@@ -38,7 +38,8 @@ class PluginOptions : HashMap<String, String?> {
         @Suppress("NAME_SHADOWING")
         var parseId = parseId
         if (options.isNullOrEmpty()) return
-        val tokenizer = StringTokenizer(options + ';', "\\=;", true)
+        check(options.all { !it.isISOControl() }) { "No control characters allowed." }
+        val tokenizer = StringTokenizer("$options;", "\\=;", true)
         val current = StringBuilder()
         var key: String? = null
         while (tokenizer.hasMoreTokens()) {
@@ -67,6 +68,14 @@ class PluginOptions : HashMap<String, String?> {
     constructor(id: String, options: String?) : this(options, false) {
         this.id = id
     }
+
+    /**
+     * Put but if value is null or default, the entry is deleted.
+     *
+     * @return Old value before put.
+     */
+    fun putWithDefault(key: String, value: String?, default: String? = null) =
+            if (value == null || value == default) remove(key) else put(key, value)
 
     private fun append(result: StringBuilder, str: String) = (0 until str.length)
             .map { str[it] }
